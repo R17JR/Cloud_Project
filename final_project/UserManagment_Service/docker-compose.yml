@@ -1,0 +1,41 @@
+version: '3.8'
+services:
+  db:
+    image: postgres:latest
+    container_name: postgres-container
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: user_service
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  supertokens:
+    image: registry.supertokens.io/supertokens/supertokens-postgresql:9.3.0
+    container_name: supertokens-core
+    environment:
+      - DATABASE_URL=postgresql://root:root@db:5432/user_service
+      - CONNECTION_URI=http://supertokens:3567
+    ports:
+      - "3567:3567"  # SuperTokens Core API port
+    depends_on:
+      - db
+
+  user-service:
+    build:
+      context: .
+    container_name: user-service
+    ports:
+      - "3000:3000"
+    environment:
+      DB_USER: root
+      DB_PASSWORD: root
+      DB_NAME: user_service
+      DB_HOST: db
+      DB_PORT: 5432
+      SUPER_TOKENS_URI: http://supertokens-core:3567  # Point to SuperTokens Core in Docker
+    depends_on:
+      - db
+      - supertokens

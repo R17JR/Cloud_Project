@@ -1,0 +1,5 @@
+confluent-kafka
+transformers
+torch
+django
+djangorestframework
